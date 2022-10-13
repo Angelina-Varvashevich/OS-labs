@@ -31,9 +31,15 @@ class BlockMatrix {
   static void multiplyMatrices(const BlockMatrix& matrixA,
                                const BlockMatrix& matrixB, BlockMatrix& matrixResult);
 
+  static void currentMultiplyBlock(const BlockMatrix& matrixA,
+                                   const BlockMatrix& matrixB, BlockMatrix& matrixResult,
+                                   int i,
+                                   int j, int k);
+
   Matrix createBlock(const Matrix& matrix, int i, int j, int block_size);
 
   std::vector<std::vector<Matrix>> blockMatrix;
+
 };
 
 #endif //MULTITHREADING__BLOCKMATRIX_H_

@@ -1,6 +1,9 @@
 #include <thread>
+#include<mutex>
 
 #include "BlockMatrix.h"
+
+std::mutex g_mutex;
 
 BlockMatrix::BlockMatrix(std::vector<std::vector<Matrix>> blockMatrix_) : blockMatrix(std::move(blockMatrix_)) {
 }
@@ -43,22 +46,32 @@ void BlockMatrix::multiplyBlock(const BlockMatrix& matrixA,
                                 int i,
                                 int j) {
   Matrix currentBlock(matrixA.getMatrix(i, 0).getRow(), matrixB.getMatrix(0, j).getColumn());
-  for (int k = 0; k < matrixB.getColumn(); k++) {
-    currentBlock = currentBlock + matrixA.getMatrix(i, k) * matrixB.getMatrix(k, j);
-  }
-  matrixResult.setMatrix(currentBlock, i, j);
-}
-
-void BlockMatrix::multiplyMatrices(const BlockMatrix& matrixA, const BlockMatrix& matrixB, BlockMatrix& matrixResult) {
   std::vector<std::thread> threadsVector;
-  for (int i = 0; i < matrixResult.getRow(); i++) {
-    for (int j = 0; j < matrixResult.getColumn(); j++) {
-      std::thread thr(multiplyBlock, matrixA, matrixB, std::ref(matrixResult), i, j);
-      threadsVector.push_back(std::move(thr));
-    }
+  for (int k = 0; k < matrixB.getColumn(); k++) {
+    std::thread thr(currentMultiplyBlock, std::cref(matrixA), std::cref(matrixB), std::ref(matrixResult), i, j, k);
+    threadsVector.push_back(std::move(thr));
   }
   for (auto& thread : threadsVector)
     thread.join();
+
+}
+
+void BlockMatrix::currentMultiplyBlock(const BlockMatrix& matrixA,
+                                       const BlockMatrix& matrixB, BlockMatrix& matrixResult,
+                                       int i,
+                                       int j, int k) {
+  g_mutex.lock();
+  Matrix currentBlock = (matrixResult.getMatrix(i, j) + matrixA.getMatrix(i, k) * matrixB.getMatrix(k, j));
+  matrixResult.setMatrix(currentBlock, i, j);
+  g_mutex.unlock();
+}
+
+void BlockMatrix::multiplyMatrices(const BlockMatrix& matrixA, const BlockMatrix& matrixB, BlockMatrix& matrixResult) {
+  for (int i = 0; i < matrixResult.getRow(); i++) {
+    for (int j = 0; j < matrixResult.getColumn(); j++) {
+      multiplyBlock(matrixA, matrixB, matrixResult, i, j);
+    }
+  }
 }
 
 Matrix BlockMatrix::multiply(const Matrix& a, const Matrix& b, int blockSize) {
