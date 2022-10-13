@@ -6,7 +6,7 @@
 #include "BlockMatrix.h"
 
 int main() {
-  const int size = 3;
+  const int size = 100;
   Matrix a(size, size);
   a.fillMatrix();
   //a.print();
