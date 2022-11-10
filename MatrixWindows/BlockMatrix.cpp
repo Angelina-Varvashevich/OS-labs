@@ -71,6 +71,9 @@ void BlockMatrix::multiplyMatrices(const BlockMatrix& matrixA, const BlockMatrix
     for (int i = 0; i < threadsVector.size(); i++) {
         WaitForSingleObject(threadsVector[i], INFINITE);
     }
+    for (int i = 0; i < threadsVector.size(); i++) {
+        CloseHandle(threadsVector[i]);
+    }
     DeleteCriticalSection(&section);
 }
 
